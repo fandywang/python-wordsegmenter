@@ -27,6 +27,13 @@
 class HMM(object):
     """
     HMM 模型.
+
+    TODO(fandywang): 增加模型训练代码, 主要分两种:
+        1. 有指导学习: 在人工标注数据集基础上, 采用最大似然估计 (MLE) 方法得到
+           n-gram 模型.
+        2. 无指导学习: 不需要人工标注数据集, 采用 Baum-Welch 算法估计参数.
+           Baum-Welch 算法又称前向-后向算法 (Forward-backward algorithm),
+           属于一种典型的 EM 算法.
     """
     STATES_FILENAME = "states.dat"
     START_LOG_PROB_FILENAME = 'start_log_prob.dat'
@@ -58,9 +65,10 @@ class HMM(object):
         HMM 解码: 基于动态规划的 Viterbi 算法.
 
         V[0][k] = start_log_prob[k] + emit_log_prob[k][obs[0]]
-        V[t][k] = argmax_k0 { V[t-1][k] + trans_log_prob[k0][k] + emit_log_prob[k][obs[t]] }
+        V[t][k] = argmax_k0 { V[t-1][k] + trans_log_prob[k0][k] }
+                  + emit_log_prob[k][obs[t]] }
 
-        k, k0 = states('B', ‘M’, 'E', 'S')
+        k, k0 表示隐含状态 states.
         """
         V = [{}]  # tabular
         path = {}
