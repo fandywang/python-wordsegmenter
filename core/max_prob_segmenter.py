@@ -78,7 +78,7 @@ class MaxProbSegmenter(object):
 
     def _segment_block(self, text):
         """
-        unigram 模型
+        最大概率切分, 此处使用的是 unigram 模型.
 
         TODO(fandywang): unigram  ->  bigram, trigram
         """
@@ -90,7 +90,7 @@ class MaxProbSegmenter(object):
         # 动态规划算法确定最大词频切分路径
         for i in xrange(N - 1, -1, -1):
             route[i] = max(
-                    [(self.vocabulary.get_prob(text[i : j + 1]) + route[j + 1][0], j)
+                    [(self.vocabulary.get_log_prob(text[i : j + 1]) + route[j + 1][0], j)
                         for j in DAG[i] ])
 
         buf = u''

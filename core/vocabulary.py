@@ -40,9 +40,9 @@ class Vocabulary(object):
     def __init__(self):
         # TODO(fandywang): 实现 double array trie, 节省内存, 提高速度
         self.trie = {}  # trie 树结构组织词典, 实现高效查找
-        self.words = {}  # word->(prob, pos), 词频率分布
+        self.words = {}  # word->(log_prob, pos), 词频率分布
         self.total_freq = 0.0
-        self.min_prob = 1.0
+        self.min_log_prob = 1.0
 
     def load(self, vocabulary_file, custom_words_dir = None):
         """
@@ -53,9 +53,9 @@ class Vocabulary(object):
             self._load_custom_words(custom_words_dir)
 
         for word, word_attr in self.words.iteritems():
-            prob = math.log(word_attr[0] / self.total_freq)
-            self.words[word] = (prob, word_attr[1])
-            self.min_prob = min(self.min_prob, prob)
+            log_prob = math.log(word_attr[0] / self.total_freq)
+            self.words[word] = (log_prob, word_attr[1])
+            self.min_log_prob = min(self.min_log_prob, log_prob)
         # pprint.pprint(self.trie)
         # pprint.pprint(self.words)
 
@@ -80,7 +80,7 @@ class Vocabulary(object):
 
             self.words[word] = (freq, pos)
             self.total_freq += freq
-            self.min_prob = min(self.min_prob, freq)
+            self.min_log_prob = min(self.min_log_prob, freq)
             self._insert_trie(word)
         fp.close()
 
@@ -117,11 +117,12 @@ class Vocabulary(object):
             ptr = ptr[ch]
         ptr[''] = ''  # ending flag
 
-    def get_prob(self, word):
+    def get_log_prob(self, word):
         """
         获取 word 的概率, 如果 word 不在词典中, 返回最小概率.
         """
-        return self.words.get(word, (self.min_prob, ''))[0]
+        return self.words.get(word, (self.min_log_prob, ''))[0]
+
 
     def get_pos(self, word):
         """

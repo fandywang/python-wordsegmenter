@@ -36,14 +36,14 @@ class VocabularyTest(unittest.TestCase):
         self.vocabulary.load('testdata/vocabulary.dat', 'testdata/custom_words')
 
         pprint.pprint(self.vocabulary.trie)
-        pprint.pprint(self.vocabulary.word_prob)
+        pprint.pprint(self.vocabulary.words)
 
     def test_vocabulary(self):
-        self.assertIn(u'英雄三国', self.vocabulary.word_prob.keys())
-        self.assertIn(u'魔鬼代言人', self.vocabulary.word_prob.keys())
-        self.assertIn(u'黄河水利委员会', self.vocabulary.word_prob.keys())
-        self.assertNotIn(u'十大伪歌手', self.vocabulary.word_prob.keys())
-        self.assertNotIn(u'走路太牛', self.vocabulary.word_prob.keys())
+        self.assertIn(u'英雄三国', self.vocabulary.words.keys())
+        self.assertIn(u'魔鬼代言人', self.vocabulary.words.keys())
+        self.assertIn(u'黄河水利委员会', self.vocabulary.words.keys())
+        self.assertNotIn(u'十大伪歌手', self.vocabulary.words.keys())
+        self.assertNotIn(u'走路太牛', self.vocabulary.words.keys())
 
         self.assertEqual('n', self.vocabulary.get_pos(u'英雄三国'))
         self.assertEqual('n', self.vocabulary.get_pos(u'魔鬼代言人'))

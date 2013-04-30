@@ -26,15 +26,12 @@
 
 import logging
 
-from hmm_segmenter import HMMSegmenter
-from max_prob_segmenter import MaxProbSegmenter
-from vocabulary import Vocabulary
+from core.hmm_segmenter import HMMSegmenter
+from core.max_prob_segmenter import MaxProbSegmenter
+from core.vocabulary import Vocabulary
 
 class WordSegmenter(object):
     """A Chinese Word Segment Toolkit.
-
-    python-wordsegmenter 是在 jieba 中文分词项目 (https://github.com/fxsjy/jieba/)
-    基础上重构而来.
 
     分词算法:
         1. 加载词典和模型数据, 支持用户自定义词典.
@@ -87,11 +84,5 @@ class WordSegmenter(object):
         """
         切词 + 词性标注, 返回词和词性组成的元组序列.
         """
+        # TODO(fandywang): 增加词性标注实现
         return self.max_prob_segmenter.segment(text)
-
-    def segment_for_search(self, text):
-        """
-        全切分
-        """
-        pass
-

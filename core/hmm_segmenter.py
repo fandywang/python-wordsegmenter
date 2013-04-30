@@ -60,16 +60,16 @@ class HMMSegmenter(object):
       (3) 最后, 根据词位定义直接获得最终的分词结果.
     """
 
-    START_PROB_FILENAME = 'start_prob.dat'
-    TRANS_PROB_FILENAME = 'trans_prob.dat'
-    EMIT_PROB_FILENAME = 'emit_prob.dat'
-    DEFAULT_PROB = -3.14E100
+    START_LOG_PROB_FILENAME = 'start_log_prob.dat'
+    TRANS_LOG_PROB_FILENAME = 'trans_log_prob.dat'
+    EMIT_LOG_PROB_FILENAME = 'emit_log_prob.dat'
+    DEFAULT_LOG_PROB = -3.14E100
 
     def __init__(self):
         self.states = ('B', 'M', 'E', 'S')  # 4-tag 表示法, 状态空间
-        self.start_prob = None  # 起始概率矩阵
-        self.trans_pron = None  # 状态转移概率矩阵
-        self.emit_prob = None  # 发射概率矩阵
+        self.start_log_prob = None  # 起始概率矩阵
+        self.trans_log_prob = None  # 状态转移概率矩阵
+        self.emit_log_prob = None  # 发射概率矩阵
 
         self.re_chinese = re.compile(ur"([\u4E00-\u9FA5]+)")  # 正则匹配汉字串
         self.re_skip = re.compile(ur"([\.0-9]+|[a-zA-Z0-9]+)")  # 正则匹配英文串和数字串
@@ -78,12 +78,12 @@ class HMMSegmenter(object):
         """
         加载模型文件.
         """
-        self.start_prob = eval(open(model_dir + '/'
-            + self.__class__.START_PROB_FILENAME, 'rb').read())
-        self.trans_prob = eval(open(model_dir + '/'
-            + self.__class__.TRANS_PROB_FILENAME, 'rb').read())
-        self.emit_prob = eval(open(model_dir + '/'
-            + self.__class__.EMIT_PROB_FILENAME, 'rb').read())
+        self.start_log_prob = eval(open(model_dir + '/'
+            + self.__class__.START_LOG_PROB_FILENAME, 'rb').read())
+        self.trans_log_prob = eval(open(model_dir + '/'
+            + self.__class__.TRANS_LOG_PROB_FILENAME, 'rb').read())
+        self.emit_log_prob = eval(open(model_dir + '/'
+            + self.__class__.EMIT_LOG_PROB_FILENAME, 'rb').read())
 
     def segment(self, text):
         """
@@ -112,7 +112,7 @@ class HMMSegmenter(object):
         """
         基于 HMM 模型切词.
         """
-        prob, tag_list = self._viterbi(text)
+        log_prob, tag_list = self._viterbi(text)
 
         begin = 0
         for i, ch in enumerate(text):
@@ -128,8 +128,8 @@ class HMMSegmenter(object):
         """
         HMM 解码: 基于动态规划的 Viterbi 算法.
 
-        V[0][k] = start_prob[k] * emit_prob[k][obs[0]]
-        V[t][k] = argmax_k0 { V[t-1][k] * trans_prob[k0][k] * emit_prob[k][obs[t]] }
+        V[0][k] = start_log_prob[k] + emit_log_prob[k][obs[0]]
+        V[t][k] = argmax_k0 { V[t-1][k] + trans_log_prob[k0][k] + emit_log_prob[k][obs[t]] }
 
         k, k0 = states('B', ‘M’, 'E', 'S')
         """
@@ -137,22 +137,22 @@ class HMMSegmenter(object):
         path = {}
 
         for k in self.states:  # init
-            V[0][k] = (self.start_prob[k]
-                    + self.emit_prob[k].get(obs[0], self.__class__.DEFAULT_PROB))
+            V[0][k] = (self.start_log_prob[k]
+                    + self.emit_log_prob[k].get(obs[0], self.__class__.DEFAULT_LOG_PROB))
             path[k] = [k]
 
         for t in xrange(1, len(obs)):
             V.append({})
             newpath = {}
             for k in self.states:
-                (prob, state) = \
+                (log_prob, state) = \
                         max([(V[t - 1][k0]
-                            + self.trans_prob[k0].get(k, self.__class__.DEFAULT_PROB), k0)
+                            + self.trans_log_prob[k0].get(k, self.__class__.DEFAULT_LOG_PROB), k0)
                             for k0 in self.states])
-                V[t][k] = prob + self.emit_prob[k].get(obs[t], self.__class__.DEFAULT_PROB)
+                V[t][k] = log_prob + self.emit_log_prob[k].get(obs[t], self.__class__.DEFAULT_LOG_PROB)
                 newpath[k] = path[state] + [k]
             path = newpath
-        (prob, state) = max([(V[len(obs) - 1][k], k) for k in ('E', 'S')])
+        (log_prob, state) = max([(V[len(obs) - 1][k], k) for k in ('E', 'S')])
 
-        return (prob, path[state])
+        return (log_prob, path[state])
 
