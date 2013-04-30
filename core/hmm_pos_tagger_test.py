@@ -26,11 +26,12 @@
 
 import unittest
 
+from hmm_pos_tagger import HMMPOSTagger
 from hmm_segmenter import HMMSegmenter
 from max_prob_segmenter import MaxProbSegmenter
 from vocabulary import Vocabulary
 
-class MaxProbSegmenterTest(unittest.TestCase):
+class HMMPOSTaggerTest(unittest.TestCase):
 
     def setUp(self):
         self.vocabulary = Vocabulary()
@@ -40,15 +41,19 @@ class MaxProbSegmenterTest(unittest.TestCase):
         self.max_prob_segmenter = MaxProbSegmenter(
                 self.vocabulary, self.hmm_segmenter)
 
+        self.hmm_pos_tagger = HMMPOSTagger()
+        self.hmm_pos_tagger.load('../data/hmm_pos_model')
+
     def call_segment(self, text):
-        for word in self.max_prob_segmenter.segment(text):
-            print word + '/\t',
+        for word, pos in self.hmm_pos_tagger.pos_tag(
+                self.max_prob_segmenter.segment(text)):
+            print word + '/' + pos + '\t',
         print ''
 
-    def test_segment(self):
+    def test_pos_tag(self):
         fp = open('testdata/document.dat', 'rb')
         for text in fp.readlines():
-            self.call_segment(text.strip())
+            self.call_pos_tag(text.strip())
         fp.close()
 
 if __name__ == '__main__':

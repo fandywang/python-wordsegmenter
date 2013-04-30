@@ -26,6 +26,7 @@
 
 import logging
 
+from core.hmm_pos_tagger import HMMPOSTagger
 from core.hmm_segmenter import HMMSegmenter
 from core.max_prob_segmenter import MaxProbSegmenter
 from core.vocabulary import Vocabulary
@@ -42,23 +43,24 @@ class WordSegmenter(object):
 
     词性标注算法:
         1. 中文分词, 得到词序列.
-        2. 基于字标注方法标注词性.
+        2. 基于 HMM模型解码算法实现词性标注.
 
     TODO(fandywang):
         1. 时间、数词、人名、地名、机构名、email、url识别.
         2. 繁简转换.
         3. 多粒度切分.
         4. 停用词识别.
-        5. 同义词标注.
     """
     VOCABULARY_FILENAME = 'vocabulary.dat'  # 基本分词词典
     CUSTOM_WORDS_DIR = "custom_words"  # 用户自定义词典
-    HMM_MODEL_DIR = 'hmm_model'  # HMM 字标注模型
+    HMM_SEGMENT_MODEL_DIR = 'hmm_segment_model'  # HMM 字标注中文分词模型
+    HMM_POS_MODEL_DIR = 'hmm_pos_model'  # HMM n-gram 词性标注模型
 
     def __init__(self):
         self.vocabulary = Vocabulary()
         self.hmm_segmenter = HMMSegmenter()
         self.max_prob_segmenter = None
+        self.hmm_pos_tagger = HMMPOSTagger()
 
     def load(self, data_dir):
         """
@@ -69,10 +71,12 @@ class WordSegmenter(object):
                 data_dir + '/'
                 + self.__class__.CUSTOM_WORDS_DIR)
         self.hmm_segmenter.load(data_dir + '/'
-                + self.__class__.HMM_MODEL_DIR)
-
+                + self.__class__.HMM_SEGMENT_MODEL_DIR)
         self.max_prob_segmenter = MaxProbSegmenter(
                 self.vocabulary, self.hmm_segmenter)
+
+        self.hmm_pos_tagger.load(data_dir + '/'
+                + self.__class__.HMM_POS_MODEL_DIR);
 
     def segment(self, text):
         """
@@ -84,5 +88,6 @@ class WordSegmenter(object):
         """
         切词 + 词性标注, 返回词和词性组成的元组序列.
         """
-        # TODO(fandywang): 增加词性标注实现
-        return self.max_prob_segmenter.segment(text)
+        return self.hmm_pos_tagger.pos_tag(
+                self.max_prob_segmenter.segment(text))
+

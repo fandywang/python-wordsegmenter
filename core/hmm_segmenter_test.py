@@ -32,7 +32,7 @@ class HMMSegmenterTest(unittest.TestCase):
 
     def setUp(self):
         self.hmm_segmenter = HMMSegmenter()
-        self.hmm_segmenter.load('../data/hmm_model')
+        self.hmm_segmenter.load('../data/hmm_segment_model')
 
     def call_segment(self, text):
         for word in self.hmm_segmenter.segment(text):

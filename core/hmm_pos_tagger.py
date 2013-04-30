@@ -24,33 +24,32 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-import unittest
+import re
+from hmm import HMM
 
-from hmm_segmenter import HMMSegmenter
-from max_prob_segmenter import MaxProbSegmenter
-from vocabulary import Vocabulary
+class HMMPOSTagger(object):
+    """
+    在中文分词结果基础上, 采用 HMM 模型实现词性标注 (Part-of-speech tagging).
+    """
 
-class MaxProbSegmenterTest(unittest.TestCase):
+    def __init__(self):
+        self.hmm = HMM()
 
-    def setUp(self):
-        self.vocabulary = Vocabulary()
-        self.vocabulary.load('../data/vocabulary.dat')
-        self.hmm_segmenter = HMMSegmenter()
-        self.hmm_segmenter.load('../data/hmm_segment_model')
-        self.max_prob_segmenter = MaxProbSegmenter(
-                self.vocabulary, self.hmm_segmenter)
+        self.re_chinese = re.compile(ur"([\u4E00-\u9FA5]+)")  # 正则匹配汉字串
+        self.re_skip = re.compile(ur"([\.0-9]+|[a-zA-Z0-9]+)")  # 正则匹配英文串和数字串
 
-    def call_segment(self, text):
-        for word in self.max_prob_segmenter.segment(text):
-            print word + '/\t',
-        print ''
+    def load(self, model_dir):
+        """
+        加载模型文件.
+        """
+        self.hmm.load(model_dir)
 
-    def test_segment(self):
-        fp = open('testdata/document.dat', 'rb')
-        for text in fp.readlines():
-            self.call_segment(text.strip())
-        fp.close()
+    def pos_tag(self, words):
+        """
+        基于 HMM 模型的词性标注.
+        """
+        log_prob, pos_list = self._viterbi(words)
 
-if __name__ == '__main__':
-    unittest.main()
+        for i, w in enumerate(words):
+            yield (w, pos_list[i])
 
